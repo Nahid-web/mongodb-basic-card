@@ -29,7 +29,14 @@ toDoSchema.methods = {
 //static method
 toDoSchema.statics = {
   findByMongodb: function () {
-    return this.find({ description: /mongodb/i });
+    return this.find({ title: /js/i });
+  },
+};
+
+//query helper
+toDoSchema.query = {
+  byLanguage: function (language) {
+    return this.find({ title: new RegExp(language, "i") });
   },
 };
 

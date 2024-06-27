@@ -47,12 +47,18 @@ router.get("/active-callback", (req, res) => {
   });
 });
 
-//get todos with mongodb
-router.get("/mongodb", async (req, res) => {
+//get todos with js
+router.get("/js", async (req, res) => {
   const data = await Todo.findByMongodb();
   if (data) {
     res.status(200).json({ data });
   }
+});
+
+//get todo by language
+router.get("/language", async (req, res) => {
+  const data = await Todo.find().byLanguage("js");
+  res.status(200).json({ data });
 });
 
 //get a todo by id
