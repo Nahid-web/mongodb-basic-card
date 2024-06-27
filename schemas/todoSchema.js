@@ -26,4 +26,11 @@ toDoSchema.methods = {
   },
 };
 
+//static method
+toDoSchema.statics = {
+  findByMongodb: function () {
+    return this.find({ description: /mongodb/i });
+  },
+};
+
 module.exports = toDoSchema;
