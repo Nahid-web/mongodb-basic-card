@@ -30,6 +30,23 @@ router.get("/", async (req, res) => {
   }
 });
 
+//get active todos
+router.get("/active", async (req, res) => {
+  const todo = new Todo();
+  const data = await todo.findActive();
+  res.status(200).json({
+    data,
+  });
+});
+
+//get active todos with callback
+router.get("/active-callback", (req, res) => {
+  const todo = new Todo();
+  todo.findActiveCallback((err, data) => {
+    res.status(200).json({ data });
+  });
+});
+
 //get a todo by id
 router.get("/:id", async (req, res) => {
   try {
