@@ -2,19 +2,23 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const toDoSchema = require("../schemas/todoSchema");
+const userSchema = require("../schemas/userSchema");
 const checkLogin = require("../middlewares/checkLogin");
 const Todo = new mongoose.model("Todo", toDoSchema);
+const User = new mongoose.model("User", userSchema);
 
 //get all the todos
 router.get("/", checkLogin, async (req, res) => {
   console.log(req.username);
   console.log(req.userId);
   try {
-    const todo = await Todo.find({ status: "active" }).select({
-      _id: 0,
-      __v: 0,
-      date: 0,
-    });
+    const todo = await Todo.find({})
+      .populate("user", "name username -_id")
+      .select({
+        _id: 0,
+        __v: 0,
+        date: 0,
+      });
     if (todo) {
       res.status(200).json({
         result: todo,
@@ -87,19 +91,33 @@ router.get("/:id", async (req, res) => {
 });
 
 //post a todo
-router.post("/", async (req, res) => {
-  const newTodo = new Todo(req.body);
-  await newTodo.save((err) => {
-    if (err) {
-      res.status(500).json({
-        error: "There was a server side error!",
-      });
-    } else {
-      res.status(200).json({
-        error: "Todo was inserted successfully!",
-      });
-    }
+router.post("/", checkLogin, async (req, res) => {
+  const newTodo = new Todo({
+    ...req.body,
+    user: req.userId,
   });
+
+  try {
+    const todo = await newTodo.save();
+    await User.updateOne(
+      {
+        _id: req.userId,
+      },
+      {
+        $push: {
+          todos: todo._id,
+        },
+      }
+    );
+    res.status(200).json({
+      message: "Todo was inserted successfully!",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      error: "There was a server side error!",
+    });
+  }
 });
 //post multiple todo
 router.post("/all", async (req, res) => {
@@ -143,7 +161,7 @@ router.delete("/:id", async (req, res) => {
   try {
     const todo = await Todo.deleteOne({ _id: req.params.id });
     if (todo) {
-      res.status(200).json({ message: "Todo was updated successfully!" });
+      res.status(200).json({ message: "Todo was deleted successfully!" });
     } else {
       res.status(404).json({ error: "Todo not found!" });
     }
